@@ -1,9 +1,3 @@
-"""
-Aplicação Flask para operações CRUD de usuários
-Seguindo padrão MVC e melhores práticas
-Inclui documentação Swagger e autenticação JWT
-"""
-
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
@@ -12,10 +6,10 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente
+# Carregar variaveis de ambiente
 load_dotenv()
 
-# Configuração da aplicação
+# Configuracao da aplicação
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -23,17 +17,17 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-string')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600  # Tokens expiram em 1 hora
 
-# Inicialização do banco de dados e JWT
+# Inicializacao do banco de dados e JWT
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
-# Middleware para corrigir o header Authorization do Swagger
+# Middleware pra corrigir o header Authorization do Swagger
 @app.before_request
 def fix_authorization_header():
     """Corrige o header Authorization quando vem do Swagger"""
     auth_header = request.headers.get('Authorization')
     if auth_header and not auth_header.startswith('Bearer '):
-        # Se o header não tem "Bearer ", adiciona usando environ
+        # Se o header nao tem "Bearer ", adiciona usando environ
         request.environ['HTTP_AUTHORIZATION'] = f'Bearer {auth_header}'
 
 # Configuração da API Swagger
@@ -42,7 +36,7 @@ api = Api(
     version='1.0',
     title='API CRUD de Usuários',
     description='API REST para operações CRUD de usuários com autenticação JWT',
-    doc='/docs/',  # URL para documentação Swagger
+    doc='/docs/',  # URL para documentacao Swagger
     prefix='/api/v1',
     authorizations={
         'Bearer': {
@@ -66,7 +60,7 @@ from controllers.auth_controller import AuthController
 user_controller = UserController(User, db)
 auth_controller = AuthController(User, db)
 
-# Namespaces para organização
+# Namespaces pra organização
 auth_ns = Namespace('auth', description='Operações de autenticação')
 users_ns = Namespace('users', description='Operações CRUD de usuários')
 
@@ -114,7 +108,7 @@ register_model = api.model('Register', {
 
 # Decorador para autenticação JWT
 def jwt_required_decorator(f):
-    """Decorador personalizado para JWT"""
+    """Decorador personalizado pra JWT"""
     def decorated_function(*args, **kwargs):
         try:
             return jwt_required()(f)(*args, **kwargs)
@@ -130,7 +124,7 @@ def jwt_required_decorator(f):
 class Register(Resource):
     @api.expect(register_model)
     def post(self):
-        """Registra um novo usuário"""
+        """Registra um novo usuario"""
         data = request.get_json()
         return auth_controller.register(data)
 
@@ -138,7 +132,7 @@ class Register(Resource):
 class Login(Resource):
     @api.expect(login_model)
     def post(self):
-        """Realiza login do usuário"""
+        """Realiza login do usuario"""
         data = request.get_json()
         return auth_controller.login(data)
 
@@ -155,7 +149,7 @@ class CurrentUser(Resource):
     @api.doc(security='Bearer')
     @jwt_required()
     def get(self):
-        """Retorna dados do usuário atual"""
+        """Retorna dados do usuario atual"""
         return auth_controller.get_current_user()
 
 @auth_ns.route('/logout')
@@ -163,32 +157,32 @@ class Logout(Resource):
     @api.doc(security='Bearer')
     @jwt_required()
     def post(self):
-        """Realiza logout do usuário"""
+        """Realiza logout do usuario"""
         return auth_controller.logout()
 
-# Endpoints de Usuários (protegidos por JWT)
+# Endpoints de Usuarios (protegidos por JWT)
 @users_ns.route('/')
 class UserList(Resource):
     @api.doc(security='Bearer')
     @jwt_required()
     def get(self):
-        """Retorna a lista de todos os usuários"""
+        """Retorna a lista de todos os usuarios"""
         return user_controller.get_all_users()
     
     @api.doc(security='Bearer')
     @api.expect(user_create_model)
     @jwt_required()
     def post(self):
-        """Cria um novo usuário (requer autenticação)"""
+        """Cria um novo usuario (requer autenticação)"""
         data = request.get_json()
         return user_controller.create_user(data)
 
-# Endpoint alternativo para teste sem autenticação global
+# Endpoint alternativo pra teste sem autenticação global
 @users_ns.route('/create')
 class UserCreateAlternative(Resource):
     @api.expect(user_create_model)
     def post(self):
-        """Cria um novo usuário (token via header manual)"""
+        """Cria um novo usuario (token via header manual)"""
         # Verificar token manualmente
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
@@ -210,52 +204,52 @@ class UserDetail(Resource):
     @api.doc(security='Bearer')
     @jwt_required()
     def get(self, user_id):
-        """Retorna os detalhes de um usuário específico"""
+        """Retorna os detalhes de um usuario específico"""
         return user_controller.get_user_by_id(user_id)
     
     @api.doc(security='Bearer')
     @jwt_required()
     @api.expect(user_update_model)
     def put(self, user_id):
-        """Atualiza os dados de um usuário existente"""
+        """Atualiza os dados de um usuario existente"""
         data = request.get_json()
         return user_controller.update_user(user_id, data)
     
     @api.doc(security='Bearer')
     @jwt_required()
     def delete(self, user_id):
-        """Remove um usuário"""
+        """Remove um usuario"""
         return user_controller.delete_user(user_id)
 
-# Endpoints legados (sem autenticação para compatibilidade)
+# Endpoints legados (sem autenticação pra compatibilidade)
 @app.route('/users', methods=['GET'])
 def get_users_legacy():
-    """Retorna a lista de todos os usuários (legado)"""
+    """Retorna a lista de todos os usuarios (legado)"""
     return user_controller.get_all_users()
 
 @app.route('/users/<int:user_id>', methods=['GET'])
 def get_user_legacy(user_id):
-    """Retorna os detalhes de um usuário específico (legado)"""
+    """Retorna os detalhes de um usuario específico (legado)"""
     return user_controller.get_user_by_id(user_id)
 
 @app.route('/users', methods=['POST'])
 def create_user_legacy():
-    """Adiciona um novo usuário (legado)"""
+    """Adiciona um novo usuario (legado)"""
     data = request.get_json()
     return user_controller.create_user(data)
 
 @app.route('/users/<int:user_id>', methods=['PUT'])
 def update_user_legacy(user_id):
-    """Atualiza os dados de um usuário existente (legado)"""
+    """Atualiza os dados de um usuario existente (legado)"""
     data = request.get_json()
     return user_controller.update_user(user_id, data)
 
 @app.route('/users/<int:user_id>', methods=['DELETE'])
 def delete_user_legacy(user_id):
-    """Remove um usuário (legado)"""
+    """Remove um usuario (legado)"""
     return user_controller.delete_user(user_id)
 
-# Handlers de erro para a API (Flask-RESTX usa @api.errorhandler diferente)
+# Handlers de erro pra API (Flask-RESTX usa @api.errorhandler diferente)
 
 @app.errorhandler(404)
 def not_found_legacy(error):

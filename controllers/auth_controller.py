@@ -1,15 +1,10 @@
-"""
-Controlador AuthController - Gerencia autenticação e autorização
-Implementa login, registro e gerenciamento de tokens JWT
-"""
-
 from flask import jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
 from datetime import timedelta
 
 class AuthController:
     """
-    Controlador responsável por gerenciar autenticação e autorização
+    Controlador responsavel por gerenciar autenticação e autorização
     Implementa login, registro e gerenciamento de tokens JWT
     """
     
@@ -20,16 +15,16 @@ class AuthController:
     
     def register(self, data):
         """
-        Registra um novo usuário
+        Registra um novo usuario
         
         Args:
-            data (dict): Dados do usuário para registro
+            data (dict): Dados do usuario pra registro
             
         Returns:
             tuple: (response_data, status_code)
         """
         try:
-            # Validação dos dados (senha obrigatória para registro)
+            # Validação dos dados (senha obrigatoria pra registro)
             is_valid, error_message = self.User.validate_data(data, require_password=True)
             if not is_valid:
                 return {
@@ -45,7 +40,7 @@ class AuthController:
                     'error': 'Email já cadastrado'
                 }, 409
             
-            # Criar novo usuário
+            # Criar novo usuario
             user = self.User(
                 name=data['name'],
                 email=data['email'],
@@ -77,12 +72,12 @@ class AuthController:
             self.db.session.rollback()
             return {
                 'success': False,
-                'error': f'Erro ao registrar usuário: {str(e)}'
+                'error': f'Erro ao registrar usuario: {str(e)}'
             }, 500
     
     def login(self, data):
         """
-        Realiza login do usuário
+        Realiza login do usuario
         
         Args:
             data (dict): Dados de login (email e senha)
@@ -97,7 +92,7 @@ class AuthController:
                     'error': 'Email e senha são obrigatórios'
                 }, 400
             
-            # Buscar usuário por email
+            # Buscar usuario por email
             user = self.User.query.filter_by(email=data['email']).first()
             
             if not user or not user.check_password(data['password']):
@@ -174,7 +169,7 @@ class AuthController:
     
     def get_current_user(self):
         """
-        Retorna os dados do usuário atual autenticado
+        Retorna os dados do usuario atual autenticado
         
         Returns:
             tuple: (response_data, status_code)
@@ -197,12 +192,12 @@ class AuthController:
         except Exception as e:
             return {
                 'success': False,
-                'error': f'Erro ao buscar usuário: {str(e)}'
+                'error': f'Erro ao buscar usuario: {str(e)}'
             }, 500
     
     def logout(self):
         """
-        Realiza logout do usuário (invalidação do token seria feita no frontend)
+        Realiza logout do usuario (invalidação do token seria feita no frontend)
         
         Returns:
             tuple: (response_data, status_code)

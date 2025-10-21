@@ -1,13 +1,8 @@
-"""
-Controlador UserController - Gerencia as operações CRUD de usuários
-Seguindo padrão Controller e princípios SOLID
-"""
-
 from flask import jsonify
 
 class UserController:
     """
-    Controlador responsável por gerenciar as operações CRUD de usuários
+    Controlador responsavel por gerenciar as operações CRUD de usuarios
     Implementa o padrão Controller do MVC
     """
     
@@ -18,7 +13,7 @@ class UserController:
     
     def get_all_users(self):
         """
-        Retorna todos os usuários cadastrados
+        Retorna todos os usuarios cadastrados
         
         Returns:
             tuple: (response_data, status_code)
@@ -36,15 +31,15 @@ class UserController:
         except Exception as e:
             return {
                 'success': False,
-                'error': f'Erro ao buscar usuários: {str(e)}'
+                'error': f'Erro ao buscar usuarios: {str(e)}'
             }, 500
     
     def get_user_by_id(self, user_id):
         """
-        Retorna um usuário específico pelo ID
+        Retorna um usuario específico pelo ID
         
         Args:
-            user_id (int): ID do usuário
+            user_id (int): ID do usuario
             
         Returns:
             tuple: (response_data, status_code)
@@ -66,21 +61,21 @@ class UserController:
         except Exception as e:
             return {
                 'success': False,
-                'error': f'Erro ao buscar usuário: {str(e)}'
+                'error': f'Erro ao buscar usuario: {str(e)}'
             }, 500
     
     def create_user(self, data):
         """
-        Cria um novo usuário (requer autenticação de admin)
+        Cria um novo usuario (requer autenticação de admin)
         
         Args:
-            data (dict): Dados do usuário
+            data (dict): Dados do usuario
             
         Returns:
             tuple: (response_data, status_code)
         """
         try:
-            # Validação dos dados (senha obrigatória para criação via admin)
+            # Validação dos dados (senha obrigatoria pra criação via admin)
             is_valid, error_message = self.User.validate_data(data, require_password=True)
             if not is_valid:
                 return {
@@ -96,7 +91,7 @@ class UserController:
                     'error': 'Email já cadastrado'
                 }, 409
             
-            # Criar novo usuário
+            # Criar novo usuario
             user = self.User(
                 name=data['name'],
                 email=data['email'],
@@ -117,16 +112,16 @@ class UserController:
             self.db.session.rollback()
             return {
                 'success': False,
-                'error': f'Erro ao criar usuário: {str(e)}'
+                'error': f'Erro ao criar usuario: {str(e)}'
             }, 500
     
     def update_user(self, user_id, data):
         """
-        Atualiza um usuário existente
+        Atualiza um usuario existente
         
         Args:
-            user_id (int): ID do usuário
-            data (dict): Dados para atualização
+            user_id (int): ID do usuario
+            data (dict): Dados pra atualização
             
         Returns:
             tuple: (response_data, status_code)
@@ -140,14 +135,14 @@ class UserController:
                     'error': 'Usuário não encontrado'
                 }, 404
             
-            # Validação dos dados (permitir campos opcionais para atualização)
+            # Validação dos dados (permitir campos opcionais pra atualização)
             if not data:
                 return {
                     'success': False,
                     'error': 'Dados não fornecidos'
                 }, 400
             
-            # Validação específica para atualização
+            # Validação especifica pra atualização
             if 'email' in data and '@' not in data['email']:
                 return {
                     'success': False,
@@ -168,7 +163,7 @@ class UserController:
                         'error': 'Idade deve ser um número válido'
                     }, 400
             
-            # Verificar se email já existe em outro usuário
+            # Verificar se email ja existe em outro usuario
             if 'email' in data:
                 existing_user = self.User.query.filter(
                     self.User.email == data['email'],
@@ -180,7 +175,7 @@ class UserController:
                         'error': 'Email já cadastrado por outro usuário'
                     }, 409
             
-            # Atualizar usuário
+            # Atualizar usuario
             user.update_from_dict(data)
             self.db.session.commit()
             
@@ -194,15 +189,15 @@ class UserController:
             self.db.session.rollback()
             return {
                 'success': False,
-                'error': f'Erro ao atualizar usuário: {str(e)}'
+                'error': f'Erro ao atualizar usuario: {str(e)}'
             }, 500
     
     def delete_user(self, user_id):
         """
-        Remove um usuário
+        Remove um usuario
         
         Args:
-            user_id (int): ID do usuário
+            user_id (int): ID do usuario
             
         Returns:
             tuple: (response_data, status_code)
@@ -216,10 +211,10 @@ class UserController:
                     'error': 'Usuário não encontrado'
                 }, 404
             
-            # Salvar dados do usuário antes de deletar para resposta
+            # Salvar dados do usuario antes de deletar pra resposta
             user_data = user.to_dict()
             
-            # Deletar usuário
+            # Deletar usuario
             self.db.session.delete(user)
             self.db.session.commit()
             
@@ -233,5 +228,5 @@ class UserController:
             self.db.session.rollback()
             return {
                 'success': False,
-                'error': f'Erro ao remover usuário: {str(e)}'
+                'error': f'Erro ao remover usuario: {str(e)}'
             }, 500

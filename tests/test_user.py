@@ -1,5 +1,5 @@
 """
-Testes unitários para a aplicação Flask de usuários
+Testes unitarios para a aplicação Flask de usuarios
 Cobertura completa das operações CRUD
 """
 
@@ -12,7 +12,7 @@ from controllers.user_controller import UserController
 from controllers.auth_controller import AuthController
 
 class TestUserModel(unittest.TestCase):
-    """Testes para o modelo User"""
+    """Testes pro modelo User"""
     
     def setUp(self):
         """Configuração inicial para cada teste"""
@@ -30,7 +30,7 @@ class TestUserModel(unittest.TestCase):
             db.drop_all()
     
     def test_user_creation(self):
-        """Testa a criação de um usuário"""
+        """Testa a criação de um usuario"""
         with self.app.app_context():
             user = User(name="João Silva", email="joao@email.com", password="123456", age=30)
             db.session.add(user)
@@ -43,7 +43,7 @@ class TestUserModel(unittest.TestCase):
             self.assertTrue(user.check_password("123456"))
     
     def test_user_to_dict(self):
-        """Testa a conversão do usuário para dicionário"""
+        """Testa a conversão do usuario pra dicionário"""
         with self.app.app_context():
             user = User(name="Maria Santos", email="maria@email.com", password="123456", age=25)
             db.session.add(user)
@@ -56,11 +56,11 @@ class TestUserModel(unittest.TestCase):
             self.assertEqual(user_dict['age'], 25)
             self.assertIn('id', user_dict)
             self.assertIn('created_at', user_dict)
-            self.assertNotIn('password_hash', user_dict)  # Não deve incluir senha por padrão
+            self.assertNotIn('password_hash', user_dict)  # Nao deve incluir senha por padrão
     
     def test_user_validation(self):
-        """Testa a validação de dados do usuário"""
-        # Dados válidos sem senha
+        """Testa a validação de dados do usuario"""
+        # Dados validos sem senha
         valid_data = {
             'name': 'Pedro Costa',
             'email': 'pedro@email.com',
@@ -70,7 +70,7 @@ class TestUserModel(unittest.TestCase):
         self.assertTrue(is_valid)
         self.assertIsNone(error)
         
-        # Dados válidos com senha
+        # Dados validos com senha
         valid_data_with_password = {
             'name': 'Pedro Costa',
             'email': 'pedro@email.com',
@@ -81,7 +81,7 @@ class TestUserModel(unittest.TestCase):
         self.assertTrue(is_valid)
         self.assertIsNone(error)
         
-        # Dados inválidos - nome vazio
+        # Dados invalidos - nome vazio
         invalid_data = {
             'name': '',
             'email': 'test@email.com'
@@ -90,7 +90,7 @@ class TestUserModel(unittest.TestCase):
         self.assertFalse(is_valid)
         self.assertIn('Nome é obrigatório', error)
         
-        # Dados inválidos - email inválido
+        # Dados invalidos - email invalido
         invalid_data = {
             'name': 'Test User',
             'email': 'email-invalido'
@@ -100,7 +100,7 @@ class TestUserModel(unittest.TestCase):
         self.assertIn('Email deve ter formato válido', error)
     
     def test_user_update_from_dict(self):
-        """Testa a atualização de usuário a partir de dicionário"""
+        """Testa a atualização de usuario a partir de dicionário"""
         with self.app.app_context():
             user = User(name="Ana Lima", email="ana@email.com", password="123456", age=28)
             db.session.add(user)
@@ -116,10 +116,10 @@ class TestUserModel(unittest.TestCase):
             
             self.assertEqual(user.name, "Ana Lima Silva")
             self.assertEqual(user.age, 29)
-            self.assertEqual(user.email, "ana@email.com")  # Não alterado
+            self.assertEqual(user.email, "ana@email.com")  # Nao alterado
 
 class TestUserController(unittest.TestCase):
-    """Testes para o controlador UserController"""
+    """Testes pro controlador UserController"""
     
     def setUp(self):
         """Configuração inicial para cada teste"""
@@ -138,7 +138,7 @@ class TestUserController(unittest.TestCase):
             db.drop_all()
     
     def test_get_all_users_empty(self):
-        """Testa busca de todos os usuários quando não há usuários"""
+        """Testa busca de todos os usuarios quando nao há usuarios"""
         with self.app.app_context():
             response, status = self.controller.get_all_users()
             
@@ -149,9 +149,9 @@ class TestUserController(unittest.TestCase):
             self.assertEqual(len(data['data']), 0)
     
     def test_get_all_users_with_data(self):
-        """Testa busca de todos os usuários com dados"""
+        """Testa busca de todos os usuarios com dados"""
         with self.app.app_context():
-            # Criar usuários de teste
+            # Criar usuarios de teste
             user1 = User(name="User 1", email="user1@email.com", password="123456", age=25)
             user2 = User(name="User 2", email="user2@email.com", password="123456", age=30)
             db.session.add_all([user1, user2])
@@ -166,7 +166,7 @@ class TestUserController(unittest.TestCase):
             self.assertEqual(len(data['data']), 2)
     
     def test_get_user_by_id_success(self):
-        """Testa busca de usuário por ID com sucesso"""
+        """Testa busca de usuario por ID com sucesso"""
         with self.app.app_context():
             user = User(name="Test User", email="test@email.com", password="123456", age=25)
             db.session.add(user)
@@ -180,7 +180,7 @@ class TestUserController(unittest.TestCase):
             self.assertEqual(data['data']['name'], "Test User")
     
     def test_get_user_by_id_not_found(self):
-        """Testa busca de usuário por ID inexistente"""
+        """Testa busca de usuario por ID inexistente"""
         with self.app.app_context():
             response, status = self.controller.get_user_by_id(999)
             
@@ -190,7 +190,7 @@ class TestUserController(unittest.TestCase):
             self.assertIn('não encontrado', data['error'])
     
     def test_create_user_success(self):
-        """Testa criação de usuário com sucesso"""
+        """Testa criação de usuario com sucesso"""
         with self.app.app_context():
             user_data = {
                 'name': 'Novo Usuário',
@@ -208,7 +208,7 @@ class TestUserController(unittest.TestCase):
             self.assertIn('criado com sucesso', data['message'])
     
     def test_create_user_invalid_data(self):
-        """Testa criação de usuário com dados inválidos"""
+        """Testa criação de usuario com dados invalidos"""
         with self.app.app_context():
             invalid_data = {
                 'name': '',
@@ -223,14 +223,14 @@ class TestUserController(unittest.TestCase):
             self.assertIn('obrigatório', data['error'])
     
     def test_create_user_duplicate_email(self):
-        """Testa criação de usuário com email duplicado"""
+        """Testa criação de usuario com email duplicado"""
         with self.app.app_context():
             # Criar primeiro usuário
             user = User(name="Primeiro", email="duplicado@email.com", password="123456")
             db.session.add(user)
             db.session.commit()
             
-            # Tentar criar segundo usuário com mesmo email
+            # Tentar criar segundo usuario com mesmo email
             user_data = {
                 'name': 'Segundo',
                 'email': 'duplicado@email.com',
@@ -245,7 +245,7 @@ class TestUserController(unittest.TestCase):
             self.assertIn('já cadastrado', data['error'])
     
     def test_update_user_success(self):
-        """Testa atualização de usuário com sucesso"""
+        """Testa atualização de usuario com sucesso"""
         with self.app.app_context():
             user = User(name="Usuário Original", email="original@email.com", password="123456", age=25)
             db.session.add(user)
@@ -265,7 +265,7 @@ class TestUserController(unittest.TestCase):
             self.assertEqual(data['data']['age'], 30)
     
     def test_update_user_not_found(self):
-        """Testa atualização de usuário inexistente"""
+        """Testa atualização de usuario inexistente"""
         with self.app.app_context():
             update_data = {'name': 'Teste'}
             
@@ -277,7 +277,7 @@ class TestUserController(unittest.TestCase):
             self.assertIn('não encontrado', data['error'])
     
     def test_delete_user_success(self):
-        """Testa remoção de usuário com sucesso"""
+        """Testa remoção de usuario com sucesso"""
         with self.app.app_context():
             user = User(name="Usuário para Deletar", email="deletar@email.com", password="123456")
             db.session.add(user)
@@ -295,7 +295,7 @@ class TestUserController(unittest.TestCase):
             self.assertIsNone(deleted_user)
     
     def test_delete_user_not_found(self):
-        """Testa remoção de usuário inexistente"""
+        """Testa remoção de usuario inexistente"""
         with self.app.app_context():
             response, status = self.controller.delete_user(999)
             
@@ -305,7 +305,7 @@ class TestUserController(unittest.TestCase):
             self.assertIn('não encontrado', data['error'])
 
 class TestFlaskApp(unittest.TestCase):
-    """Testes de integração para a aplicação Flask"""
+    """Testes de integração pra aplicação Flask"""
     
     def setUp(self):
         """Configuração inicial para cada teste"""
@@ -352,7 +352,7 @@ class TestFlaskApp(unittest.TestCase):
     
     def test_get_user_by_id_endpoint(self):
         """Testa endpoint GET /users/{id}"""
-        # Primeiro criar um usuário
+        # Primeiro criar um usuario
         user_data = {
             'name': 'Usuário Teste',
             'email': 'teste@email.com',
@@ -364,7 +364,7 @@ class TestFlaskApp(unittest.TestCase):
                                         content_type='application/json')
         user_id = json.loads(create_response.data)['data']['id']
         
-        # Buscar o usuário criado
+        # Buscar o usuario criado
         response = self.client.get(f'/users/{user_id}')
         self.assertEqual(response.status_code, 200)
         
@@ -386,7 +386,7 @@ class TestFlaskApp(unittest.TestCase):
                                         content_type='application/json')
         user_id = json.loads(create_response.data)['data']['id']
         
-        # Atualizar usuário
+        # Atualizar usuario
         update_data = {
             'name': 'Usuário Atualizado',
             'age': 30
@@ -415,7 +415,7 @@ class TestFlaskApp(unittest.TestCase):
                                         content_type='application/json')
         user_id = json.loads(create_response.data)['data']['id']
         
-        # Deletar usuário
+        # Deletar usuario
         response = self.client.delete(f'/users/{user_id}')
         
         self.assertEqual(response.status_code, 200)
@@ -424,7 +424,7 @@ class TestFlaskApp(unittest.TestCase):
         self.assertIn('removido com sucesso', data['message'])
 
 class TestAuthController(unittest.TestCase):
-    """Testes para o controlador de autenticação"""
+    """Testes pro controlador de autenticação"""
     
     def setUp(self):
         """Configuração inicial para cada teste"""
@@ -443,7 +443,7 @@ class TestAuthController(unittest.TestCase):
             db.drop_all()
     
     def test_register_success(self):
-        """Testa registro de usuário com sucesso"""
+        """Testa registro de usuario com sucesso"""
         with self.app.app_context():
             user_data = {
                 'name': 'Novo Usuário',
@@ -469,7 +469,7 @@ class TestAuthController(unittest.TestCase):
             db.session.add(user)
             db.session.commit()
             
-            # Tentar registrar segundo usuário com mesmo email
+            # Tentar registrar segundo usuario com mesmo email
             user_data = {
                 'name': 'Segundo',
                 'email': 'duplicado@email.com',
@@ -486,7 +486,7 @@ class TestAuthController(unittest.TestCase):
     def test_login_success(self):
         """Testa login com sucesso"""
         with self.app.app_context():
-            # Criar usuário
+            # Criar usuario
             user = User(name="Usuário Teste", email="teste@email.com", password="123456")
             db.session.add(user)
             db.session.commit()
@@ -506,7 +506,7 @@ class TestAuthController(unittest.TestCase):
             self.assertIn('access_token', data['data'])
     
     def test_login_invalid_credentials(self):
-        """Testa login com credenciais inválidas"""
+        """Testa login com credenciais invalidas"""
         with self.app.app_context():
             login_data = {
                 'email': 'inexistente@email.com',

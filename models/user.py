@@ -1,8 +1,3 @@
-"""
-Modelo User - Representa a entidade usuário no banco de dados
-Seguindo padrões de orientação a objetos
-"""
-
 from datetime import datetime, timezone
 import bcrypt
 
@@ -11,8 +6,8 @@ def create_user_model(db):
     
     class User(db.Model):
         """
-        Modelo User que representa a entidade usuário
-        Herda de db.Model para integração com SQLAlchemy
+        Modelo User que representa a entidade usuario
+        Herda de db.Model pra integração com SQLAlchemy
         """
         
         __tablename__ = 'users'
@@ -32,10 +27,10 @@ def create_user_model(db):
             Construtor da classe User
             
             Args:
-                name (str): Nome do usuário
-                email (str): Email do usuário
-                password (str): Senha do usuário (será hasheada)
-                age (int, optional): Idade do usuário
+                name (str): Nome do usuario
+                email (str): Email do usuario
+                password (str): Senha do usuario (será hasheada)
+                age (int, optional): Idade do usuario
             """
             self.name = name
             self.email = email
@@ -45,13 +40,13 @@ def create_user_model(db):
     
         def to_dict(self, include_sensitive=False):
             """
-            Converte o objeto User para dicionário
+            Converte o objeto User pra dicionário
             
             Args:
-                include_sensitive (bool): Se deve incluir dados sensíveis
+                include_sensitive (bool): Se deve incluir dados sensiveis
             
             Returns:
-                dict: Dicionário com os dados do usuário
+                dict: Dicionário com os dados do usuario
             """
             data = {
                 'id': self.id,
@@ -70,10 +65,10 @@ def create_user_model(db):
     
         def update_from_dict(self, data):
             """
-            Atualiza os dados do usuário a partir de um dicionário
+            Atualiza os dados do usuario a partir de um dicionário
             
             Args:
-                data (dict): Dados para atualização
+                data (dict): Dados pra atualização
             """
             if 'name' in data:
                 self.name = data['name']
@@ -101,7 +96,7 @@ def create_user_model(db):
         
         def check_password(self, password):
             """
-            Verifica se a senha fornecida está correta
+            Verifica se a senha fornecida esta correta
             
             Args:
                 password (str): Senha em texto plano
@@ -114,11 +109,11 @@ def create_user_model(db):
         @staticmethod
         def validate_data(data, require_password=False):
             """
-            Valida os dados de entrada para criação/atualização de usuário
+            Valida os dados de entrada pra criação/atualização de usuario
             
             Args:
-                data (dict): Dados para validação
-                require_password (bool): Se a senha é obrigatória
+                data (dict): Dados pra validação
+                require_password (bool): Se a senha é obrigatoria
                 
             Returns:
                 tuple: (is_valid, error_message)
@@ -126,7 +121,7 @@ def create_user_model(db):
             if not data:
                 return False, "Dados não fornecidos"
             
-            # Validação para criação
+            # Validação pra criação
             if 'name' not in data or not data['name'].strip():
                 return False, "Nome é obrigatório"
             
@@ -137,7 +132,7 @@ def create_user_model(db):
             if '@' not in data['email']:
                 return False, "Email deve ter formato válido"
             
-            # Validação de senha se obrigatória
+            # Validação de senha se obrigatoria
             if require_password:
                 if 'password' not in data or not data['password'].strip():
                     return False, "Senha é obrigatória"
@@ -160,7 +155,7 @@ def create_user_model(db):
             Representação string do objeto User
             
             Returns:
-                str: String representando o usuário
+                str: String representando o usuario
             """
             return f'<User {self.name} - {self.email}>'
     

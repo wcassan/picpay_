@@ -1,7 +1,3 @@
-"""
-Configurações da aplicação
-"""
-
 import os
 
 class Config:
@@ -18,7 +14,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
 
 class ProductionConfig(Config):
-    """Configuração para produção"""
+    """Configuração pra produção"""
     DEBUG = False
 
 # Configuração padrão
