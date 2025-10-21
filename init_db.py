@@ -21,11 +21,11 @@ def init_database():
         
         # Criar usuários de exemplo
         sample_users = [
-            User(name="João Silva", email="joao.silva@email.com", age=30),
-            User(name="Maria Santos", email="maria.santos@email.com", age=25),
-            User(name="Pedro Costa", email="pedro.costa@email.com", age=35),
-            User(name="Ana Lima", email="ana.lima@email.com", age=28),
-            User(name="Carlos Oliveira", email="carlos.oliveira@email.com", age=42)
+            User(name="João Silva", email="joao.silva@email.com", password="123456", age=30),
+            User(name="Maria Santos", email="maria.santos@email.com", password="123456", age=25),
+            User(name="Pedro Costa", email="pedro.costa@email.com", password="123456", age=35),
+            User(name="Ana Lima", email="ana.lima@email.com", password="123456", age=28),
+            User(name="Carlos Oliveira", email="carlos.oliveira@email.com", password="123456", age=42)
         ]
         
         # Inserir usuários no banco

@@ -4,6 +4,7 @@ Seguindo padrões de orientação a objetos
 """
 
 from datetime import datetime, timezone
+import bcrypt
 
 def create_user_model(db):
     """Cria o modelo User dinamicamente após a inicialização do db"""
@@ -20,38 +21,52 @@ def create_user_model(db):
         id = db.Column(db.Integer, primary_key=True)
         name = db.Column(db.String(100), nullable=False)
         email = db.Column(db.String(120), unique=True, nullable=False)
+        password_hash = db.Column(db.String(255), nullable=False)
         age = db.Column(db.Integer, nullable=True)
+        is_active = db.Column(db.Boolean, default=True, nullable=False)
         created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
         updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-        def __init__(self, name, email, age=None):
+        def __init__(self, name, email, password, age=None):
             """
             Construtor da classe User
             
             Args:
                 name (str): Nome do usuário
                 email (str): Email do usuário
+                password (str): Senha do usuário (será hasheada)
                 age (int, optional): Idade do usuário
             """
             self.name = name
             self.email = email
+            self.password_hash = self._hash_password(password)
             self.age = age
+            self.is_active = True
     
-        def to_dict(self):
+        def to_dict(self, include_sensitive=False):
             """
             Converte o objeto User para dicionário
+            
+            Args:
+                include_sensitive (bool): Se deve incluir dados sensíveis
             
             Returns:
                 dict: Dicionário com os dados do usuário
             """
-            return {
+            data = {
                 'id': self.id,
                 'name': self.name,
                 'email': self.email,
                 'age': self.age,
+                'is_active': self.is_active,
                 'created_at': self.created_at.isoformat() if self.created_at else None,
                 'updated_at': self.updated_at.isoformat() if self.updated_at else None
             }
+            
+            if include_sensitive:
+                data['password_hash'] = self.password_hash
+                
+            return data
     
         def update_from_dict(self, data):
             """
@@ -66,15 +81,44 @@ def create_user_model(db):
                 self.email = data['email']
             if 'age' in data:
                 self.age = data['age']
+            if 'password' in data:
+                self.password_hash = self._hash_password(data['password'])
+            if 'is_active' in data:
+                self.is_active = data['is_active']
             self.updated_at = datetime.now(timezone.utc)
+        
+        def _hash_password(self, password):
+            """
+            Gera hash da senha usando bcrypt
+            
+            Args:
+                password (str): Senha em texto plano
+                
+            Returns:
+                str: Hash da senha
+            """
+            return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        def check_password(self, password):
+            """
+            Verifica se a senha fornecida está correta
+            
+            Args:
+                password (str): Senha em texto plano
+                
+            Returns:
+                bool: True se a senha estiver correta
+            """
+            return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
     
         @staticmethod
-        def validate_data(data):
+        def validate_data(data, require_password=False):
             """
             Valida os dados de entrada para criação/atualização de usuário
             
             Args:
                 data (dict): Dados para validação
+                require_password (bool): Se a senha é obrigatória
                 
             Returns:
                 tuple: (is_valid, error_message)
@@ -92,6 +136,13 @@ def create_user_model(db):
             # Validação de formato de email simples
             if '@' not in data['email']:
                 return False, "Email deve ter formato válido"
+            
+            # Validação de senha se obrigatória
+            if require_password:
+                if 'password' not in data or not data['password'].strip():
+                    return False, "Senha é obrigatória"
+                if len(data['password']) < 6:
+                    return False, "Senha deve ter pelo menos 6 caracteres"
             
             # Validação de idade se fornecida
             if 'age' in data and data['age'] is not None:

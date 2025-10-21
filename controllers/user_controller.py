@@ -27,17 +27,17 @@ class UserController:
             users = self.User.query.all()
             users_data = [user.to_dict() for user in users]
             
-            return jsonify({
+            return {
                 'success': True,
                 'data': users_data,
                 'count': len(users_data)
-            }), 200
+            }, 200
             
         except Exception as e:
-            return jsonify({
+            return {
                 'success': False,
                 'error': f'Erro ao buscar usuários: {str(e)}'
-            }), 500
+            }, 500
     
     def get_user_by_id(self, user_id):
         """
@@ -53,25 +53,25 @@ class UserController:
             user = self.db.session.get(self.User, user_id)
             
             if not user:
-                return jsonify({
+                return {
                     'success': False,
                     'error': 'Usuário não encontrado'
-                }), 404
+                }, 404
             
-            return jsonify({
+            return {
                 'success': True,
                 'data': user.to_dict()
-            }), 200
+            }, 200
             
         except Exception as e:
-            return jsonify({
+            return {
                 'success': False,
                 'error': f'Erro ao buscar usuário: {str(e)}'
-            }), 500
+            }, 500
     
     def create_user(self, data):
         """
-        Cria um novo usuário
+        Cria um novo usuário (requer autenticação de admin)
         
         Args:
             data (dict): Dados do usuário
@@ -80,44 +80,45 @@ class UserController:
             tuple: (response_data, status_code)
         """
         try:
-            # Validação dos dados
-            is_valid, error_message = self.User.validate_data(data)
+            # Validação dos dados (senha obrigatória para criação via admin)
+            is_valid, error_message = self.User.validate_data(data, require_password=True)
             if not is_valid:
-                return jsonify({
+                return {
                     'success': False,
                     'error': error_message
-                }), 400
+                }, 400
             
             # Verificar se email já existe
             existing_user = self.User.query.filter_by(email=data['email']).first()
             if existing_user:
-                return jsonify({
+                return {
                     'success': False,
                     'error': 'Email já cadastrado'
-                }), 409
+                }, 409
             
             # Criar novo usuário
             user = self.User(
                 name=data['name'],
                 email=data['email'],
+                password=data['password'],
                 age=data.get('age')
             )
             
             self.db.session.add(user)
             self.db.session.commit()
             
-            return jsonify({
+            return {
                 'success': True,
                 'data': user.to_dict(),
                 'message': 'Usuário criado com sucesso'
-            }), 201
+            }, 201
             
         except Exception as e:
             self.db.session.rollback()
-            return jsonify({
+            return {
                 'success': False,
                 'error': f'Erro ao criar usuário: {str(e)}'
-            }), 500
+            }, 500
     
     def update_user(self, user_id, data):
         """
@@ -134,38 +135,38 @@ class UserController:
             # Buscar usuário
             user = self.db.session.get(self.User, user_id)
             if not user:
-                return jsonify({
+                return {
                     'success': False,
                     'error': 'Usuário não encontrado'
-                }), 404
+                }, 404
             
             # Validação dos dados (permitir campos opcionais para atualização)
             if not data:
-                return jsonify({
+                return {
                     'success': False,
                     'error': 'Dados não fornecidos'
-                }), 400
+                }, 400
             
             # Validação específica para atualização
             if 'email' in data and '@' not in data['email']:
-                return jsonify({
+                return {
                     'success': False,
                     'error': 'Email deve ter formato válido'
-                }), 400
+                }, 400
             
             if 'age' in data and data['age'] is not None:
                 try:
                     age = int(data['age'])
                     if age < 0 or age > 150:
-                        return jsonify({
+                        return {
                             'success': False,
                             'error': 'Idade deve estar entre 0 e 150 anos'
-                        }), 400
+                        }, 400
                 except (ValueError, TypeError):
-                    return jsonify({
+                    return {
                         'success': False,
                         'error': 'Idade deve ser um número válido'
-                    }), 400
+                    }, 400
             
             # Verificar se email já existe em outro usuário
             if 'email' in data:
@@ -174,27 +175,27 @@ class UserController:
                     self.User.id != user_id
                 ).first()
                 if existing_user:
-                    return jsonify({
+                    return {
                         'success': False,
                         'error': 'Email já cadastrado por outro usuário'
-                    }), 409
+                    }, 409
             
             # Atualizar usuário
             user.update_from_dict(data)
             self.db.session.commit()
             
-            return jsonify({
+            return {
                 'success': True,
                 'data': user.to_dict(),
                 'message': 'Usuário atualizado com sucesso'
-            }), 200
+            }, 200
             
         except Exception as e:
             self.db.session.rollback()
-            return jsonify({
+            return {
                 'success': False,
                 'error': f'Erro ao atualizar usuário: {str(e)}'
-            }), 500
+            }, 500
     
     def delete_user(self, user_id):
         """
@@ -210,10 +211,10 @@ class UserController:
             # Buscar usuário
             user = self.db.session.get(self.User, user_id)
             if not user:
-                return jsonify({
+                return {
                     'success': False,
                     'error': 'Usuário não encontrado'
-                }), 404
+                }, 404
             
             # Salvar dados do usuário antes de deletar para resposta
             user_data = user.to_dict()
@@ -222,15 +223,15 @@ class UserController:
             self.db.session.delete(user)
             self.db.session.commit()
             
-            return jsonify({
+            return {
                 'success': True,
                 'data': user_data,
                 'message': 'Usuário removido com sucesso'
-            }), 200
+            }, 200
             
         except Exception as e:
             self.db.session.rollback()
-            return jsonify({
+            return {
                 'success': False,
                 'error': f'Erro ao remover usuário: {str(e)}'
-            }), 500
+            }, 500

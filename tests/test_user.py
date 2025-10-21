@@ -9,6 +9,7 @@ import os
 import tempfile
 from app import app, db, User
 from controllers.user_controller import UserController
+from controllers.auth_controller import AuthController
 
 class TestUserModel(unittest.TestCase):
     """Testes para o modelo User"""
@@ -31,7 +32,7 @@ class TestUserModel(unittest.TestCase):
     def test_user_creation(self):
         """Testa a criação de um usuário"""
         with self.app.app_context():
-            user = User(name="João Silva", email="joao@email.com", age=30)
+            user = User(name="João Silva", email="joao@email.com", password="123456", age=30)
             db.session.add(user)
             db.session.commit()
             
@@ -39,11 +40,12 @@ class TestUserModel(unittest.TestCase):
             self.assertEqual(user.email, "joao@email.com")
             self.assertEqual(user.age, 30)
             self.assertIsNotNone(user.id)
+            self.assertTrue(user.check_password("123456"))
     
     def test_user_to_dict(self):
         """Testa a conversão do usuário para dicionário"""
         with self.app.app_context():
-            user = User(name="Maria Santos", email="maria@email.com", age=25)
+            user = User(name="Maria Santos", email="maria@email.com", password="123456", age=25)
             db.session.add(user)
             db.session.commit()
             
@@ -54,16 +56,28 @@ class TestUserModel(unittest.TestCase):
             self.assertEqual(user_dict['age'], 25)
             self.assertIn('id', user_dict)
             self.assertIn('created_at', user_dict)
+            self.assertNotIn('password_hash', user_dict)  # Não deve incluir senha por padrão
     
     def test_user_validation(self):
         """Testa a validação de dados do usuário"""
-        # Dados válidos
+        # Dados válidos sem senha
         valid_data = {
             'name': 'Pedro Costa',
             'email': 'pedro@email.com',
             'age': 35
         }
         is_valid, error = User.validate_data(valid_data)
+        self.assertTrue(is_valid)
+        self.assertIsNone(error)
+        
+        # Dados válidos com senha
+        valid_data_with_password = {
+            'name': 'Pedro Costa',
+            'email': 'pedro@email.com',
+            'password': '123456',
+            'age': 35
+        }
+        is_valid, error = User.validate_data(valid_data_with_password, require_password=True)
         self.assertTrue(is_valid)
         self.assertIsNone(error)
         
@@ -88,7 +102,7 @@ class TestUserModel(unittest.TestCase):
     def test_user_update_from_dict(self):
         """Testa a atualização de usuário a partir de dicionário"""
         with self.app.app_context():
-            user = User(name="Ana Lima", email="ana@email.com", age=28)
+            user = User(name="Ana Lima", email="ana@email.com", password="123456", age=28)
             db.session.add(user)
             db.session.commit()
             
@@ -138,8 +152,8 @@ class TestUserController(unittest.TestCase):
         """Testa busca de todos os usuários com dados"""
         with self.app.app_context():
             # Criar usuários de teste
-            user1 = User(name="User 1", email="user1@email.com", age=25)
-            user2 = User(name="User 2", email="user2@email.com", age=30)
+            user1 = User(name="User 1", email="user1@email.com", password="123456", age=25)
+            user2 = User(name="User 2", email="user2@email.com", password="123456", age=30)
             db.session.add_all([user1, user2])
             db.session.commit()
             
@@ -154,7 +168,7 @@ class TestUserController(unittest.TestCase):
     def test_get_user_by_id_success(self):
         """Testa busca de usuário por ID com sucesso"""
         with self.app.app_context():
-            user = User(name="Test User", email="test@email.com", age=25)
+            user = User(name="Test User", email="test@email.com", password="123456", age=25)
             db.session.add(user)
             db.session.commit()
             
@@ -181,6 +195,7 @@ class TestUserController(unittest.TestCase):
             user_data = {
                 'name': 'Novo Usuário',
                 'email': 'novo@email.com',
+                'password': '123456',
                 'age': 25
             }
             
@@ -211,14 +226,15 @@ class TestUserController(unittest.TestCase):
         """Testa criação de usuário com email duplicado"""
         with self.app.app_context():
             # Criar primeiro usuário
-            user = User(name="Primeiro", email="duplicado@email.com")
+            user = User(name="Primeiro", email="duplicado@email.com", password="123456")
             db.session.add(user)
             db.session.commit()
             
             # Tentar criar segundo usuário com mesmo email
             user_data = {
                 'name': 'Segundo',
-                'email': 'duplicado@email.com'
+                'email': 'duplicado@email.com',
+                'password': '123456'
             }
             
             response, status = self.controller.create_user(user_data)
@@ -231,7 +247,7 @@ class TestUserController(unittest.TestCase):
     def test_update_user_success(self):
         """Testa atualização de usuário com sucesso"""
         with self.app.app_context():
-            user = User(name="Usuário Original", email="original@email.com", age=25)
+            user = User(name="Usuário Original", email="original@email.com", password="123456", age=25)
             db.session.add(user)
             db.session.commit()
             
@@ -263,7 +279,7 @@ class TestUserController(unittest.TestCase):
     def test_delete_user_success(self):
         """Testa remoção de usuário com sucesso"""
         with self.app.app_context():
-            user = User(name="Usuário para Deletar", email="deletar@email.com")
+            user = User(name="Usuário para Deletar", email="deletar@email.com", password="123456")
             db.session.add(user)
             db.session.commit()
             
@@ -321,6 +337,7 @@ class TestFlaskApp(unittest.TestCase):
         user_data = {
             'name': 'Teste Endpoint',
             'email': 'endpoint@email.com',
+            'password': '123456',
             'age': 25
         }
         
@@ -338,7 +355,8 @@ class TestFlaskApp(unittest.TestCase):
         # Primeiro criar um usuário
         user_data = {
             'name': 'Usuário Teste',
-            'email': 'teste@email.com'
+            'email': 'teste@email.com',
+            'password': '123456'
         }
         
         create_response = self.client.post('/users',
@@ -359,7 +377,8 @@ class TestFlaskApp(unittest.TestCase):
         # Criar usuário
         user_data = {
             'name': 'Usuário Original',
-            'email': 'original@email.com'
+            'email': 'original@email.com',
+            'password': '123456'
         }
         
         create_response = self.client.post('/users',
@@ -387,7 +406,8 @@ class TestFlaskApp(unittest.TestCase):
         # Criar usuário
         user_data = {
             'name': 'Usuário para Deletar',
-            'email': 'deletar@email.com'
+            'email': 'deletar@email.com',
+            'password': '123456'
         }
         
         create_response = self.client.post('/users',
@@ -402,6 +422,103 @@ class TestFlaskApp(unittest.TestCase):
         data = json.loads(response.data)
         self.assertTrue(data['success'])
         self.assertIn('removido com sucesso', data['message'])
+
+class TestAuthController(unittest.TestCase):
+    """Testes para o controlador de autenticação"""
+    
+    def setUp(self):
+        """Configuração inicial para cada teste"""
+        self.app = app
+        self.app.config['TESTING'] = True
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        
+        with self.app.app_context():
+            db.create_all()
+            self.controller = AuthController(User, db)
+    
+    def tearDown(self):
+        """Limpeza após cada teste"""
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+    
+    def test_register_success(self):
+        """Testa registro de usuário com sucesso"""
+        with self.app.app_context():
+            user_data = {
+                'name': 'Novo Usuário',
+                'email': 'novo@email.com',
+                'password': '123456',
+                'age': 25
+            }
+            
+            response, status = self.controller.register(user_data)
+            
+            self.assertEqual(status, 201)
+            data = json.loads(response.data)
+            self.assertTrue(data['success'])
+            self.assertEqual(data['data']['user']['name'], 'Novo Usuário')
+            self.assertIn('access_token', data['data'])
+            self.assertIn('refresh_token', data['data'])
+    
+    def test_register_duplicate_email(self):
+        """Testa registro com email duplicado"""
+        with self.app.app_context():
+            # Criar primeiro usuário
+            user = User(name="Primeiro", email="duplicado@email.com", password="123456")
+            db.session.add(user)
+            db.session.commit()
+            
+            # Tentar registrar segundo usuário com mesmo email
+            user_data = {
+                'name': 'Segundo',
+                'email': 'duplicado@email.com',
+                'password': '123456'
+            }
+            
+            response, status = self.controller.register(user_data)
+            
+            self.assertEqual(status, 409)
+            data = json.loads(response.data)
+            self.assertFalse(data['success'])
+            self.assertIn('já cadastrado', data['error'])
+    
+    def test_login_success(self):
+        """Testa login com sucesso"""
+        with self.app.app_context():
+            # Criar usuário
+            user = User(name="Usuário Teste", email="teste@email.com", password="123456")
+            db.session.add(user)
+            db.session.commit()
+            
+            # Fazer login
+            login_data = {
+                'email': 'teste@email.com',
+                'password': '123456'
+            }
+            
+            response, status = self.controller.login(login_data)
+            
+            self.assertEqual(status, 200)
+            data = json.loads(response.data)
+            self.assertTrue(data['success'])
+            self.assertEqual(data['data']['user']['email'], 'teste@email.com')
+            self.assertIn('access_token', data['data'])
+    
+    def test_login_invalid_credentials(self):
+        """Testa login com credenciais inválidas"""
+        with self.app.app_context():
+            login_data = {
+                'email': 'inexistente@email.com',
+                'password': '123456'
+            }
+            
+            response, status = self.controller.login(login_data)
+            
+            self.assertEqual(status, 401)
+            data = json.loads(response.data)
+            self.assertFalse(data['success'])
+            self.assertIn('inválidos', data['error'])
 
 if __name__ == '__main__':
     unittest.main()
